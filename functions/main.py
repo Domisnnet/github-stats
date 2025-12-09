@@ -91,6 +91,37 @@ THEMES = {
         "rank_circle_fill": "#61afef",
         "lang_colors": LANG_COLORS,
     },
+    "radical": {
+        "background": "#141321",
+        "title": "#fe428e",
+        "text": "#a9fef7",
+        "icon": "#fe428e",
+        "border": "#fe428e",
+        "rank_circle_bg": "#54253a",
+        "rank_circle_fill": "#fe428e",
+        "lang_colors": LANG_COLORS,
+    },
+    "merko": {
+        "background": "#0a0f0d",
+        "title": "#ef553b",
+        "text": "#a2a2a2",
+        "icon": "#ef553b",
+        "border": "#ef553b",
+        "rank_circle_bg": "#2d2d2d",
+        "rank_circle_fill": "#ef553b",
+        "lang_colors": LANG_COLORS,
+    },
+    "cobalt": {
+        "background": "#0047AB",
+        "title": "#FFC600",
+        "text": "#FFFFFF",
+        "icon": "#FFC600",
+        "border": "#333",
+        "rank_circle_bg": "#333",
+        "rank_circle_fill": "#FFC600",
+        "lang_colors": LANG_COLORS,
+    },
+
 }
 
 ICONS = {
