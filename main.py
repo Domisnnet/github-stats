@@ -185,7 +185,7 @@ def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
     theme = THEMES.get(theme_name, THEMES["tokyonight"])
     if not stats:
         return f"""
-<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
+<svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
   <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle"
         font-family="Segoe UI, Ubuntu, Sans-Serif">Failed to fetch GitHub stats</text>
@@ -271,7 +271,7 @@ def create_language_donut_chart_svg(
     theme = THEMES.get(theme_name, THEMES["tokyonight"])
     if not langs:
         return f"""
-<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
+<svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
   <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle"
         font-family="Segoe UI, Ubuntu, Sans-Serif">Failed to fetch language data</text>
@@ -317,8 +317,8 @@ def create_language_donut_chart_svg(
         start_angle = end_angle
 
     return f"""
-<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
-  <rect width="448" height="178" x="1" y="1" rx="5" ry="5"
+<svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
+  <rect width="493" height="193" x="1" y="1" rx="5" ry="5"
         fill="{theme['background']}" stroke="{theme['border']}"/>
   <text x="20" y="30" font-family="Segoe UI, Ubuntu, Sans-Serif"
         font-size="18" font-weight="bold" fill="{theme['title']}">Top Languages</text>

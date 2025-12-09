@@ -12,3 +12,11 @@
 2025-12-09 17:29:49,769 - main - INFO - Fetching user data for Domisnnet
 2025-12-09 17:29:49,909 - main - ERROR - Error fetching GitHub stats: 403 Client Error: rate limit exceeded for url: https://api.github.com/users/Domisnnet
 2025-12-09 17:29:49,917 - main - ERROR - Error fetching top languages: 403 Client Error: rate limit exceeded for url: https://api.github.com/users/Domisnnet/repos?per_page=100&type=owner
+2025-12-09 17:32:08,446 - main - INFO - Fetching user data for dominique.goncalves61@gmail.com
+2025-12-09 17:32:08,447 - main - INFO - Fetching repos for top languages of dominique.goncalves61@gmail.com
+2025-12-09 17:32:08,596 - main - ERROR - Error fetching top languages: 404 Client Error: Not Found for url: https://api.github.com/users/dominique.goncalves61@gmail.com/repos?per_page=100&type=owner
+2025-12-09 17:32:08,602 - main - ERROR - Error fetching GitHub stats: 404 Client Error: Not Found for url: https://api.github.com/users/dominique.goncalves61@gmail.com
+2025-12-09 17:32:19,384 - main - INFO - Fetching repos for top languages of Domisnnet
+2025-12-09 17:32:19,385 - main - INFO - Fetching user data for Domisnnet
+2025-12-09 17:32:19,514 - main - ERROR - Error fetching top languages: 403 Client Error: rate limit exceeded for url: https://api.github.com/users/Domisnnet/repos?per_page=100&type=owner
+2025-12-09 17:32:19,568 - main - INFO - Fetching repos for Domisnnet
