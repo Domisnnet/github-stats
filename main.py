@@ -81,8 +81,51 @@ def fetch_github_stats(username):
         "Total Stars": 123,
         "Total Forks": 45,
         "Public Repos": 67,
-        "Followers": 890
+        "Followers": 890,
+        "Total Commits": 2500, # Increased for a better rank
+        "Total PRs": 512,      
+        "Total Issues": 256,    
+        "Contributions": 2048 
     }
+
+def calculate_rank(stats):
+    """Calculates a rank based on GitHub stats."""
+    COMMITS_WEIGHT = 1.75
+    PRS_WEIGHT = 1.5
+    ISSUES_WEIGHT = 1
+    STARS_WEIGHT = 1.25
+    FOLLOWERS_WEIGHT = 1
+
+    score = (
+        stats.get("Total Commits", 0) * COMMITS_WEIGHT +
+        stats.get("Total PRs", 0) * PRS_WEIGHT +
+        stats.get("Total Issues", 0) * ISSUES_WEIGHT +
+        stats.get("Total Stars", 0) * STARS_WEIGHT +
+        stats.get("Followers", 0) * FOLLOWERS_WEIGHT
+    )
+
+    THRESHOLDS = {
+        "S+": 10000, "S": 7500, "A+": 5000, "A": 2500,
+        "B+": 1000, "B": 500, "C+": 250, "C": 100,
+    }
+    
+    rank = "C"
+    for r, threshold in THRESHOLDS.items():
+        if score >= threshold:
+            rank = r
+            break
+            
+    RANK_COLORS = {
+        "S": "#FFD700",
+        "A": "#38bdae",
+        "B": "#70a5fd",
+        "C": "#c9cacc",
+    }
+    
+    base_rank = rank[0]
+    color = RANK_COLORS.get(base_rank, RANK_COLORS["C"])
+
+    return {"level": rank, "color": color}
 
 def create_stats_svg(stats, theme):
     '''Creates an SVG image for the GitHub stats.'''
@@ -92,18 +135,35 @@ def create_stats_svg(stats, theme):
                     <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle" font-family="Arial, sans-serif">Failed to fetch GitHub stats</text>
                   </svg>'''
 
+    rank = calculate_rank(stats)
     stat_items_svg = ""
     y_position = 70
     
-    for key, value in list(stats.items())[1:]: # Skip name
-        stat_items_svg += f'''
-        <g transform="translate(25, {y_position})">
-            <text x="25" y="15" font-family="Arial, sans-serif" font-size="14" fill="{theme['text']}">
-                <tspan font-weight="bold">{key}:</tspan> {value}
-            </tspan>
-        </g>
-        '''
-        y_position += 25
+    display_stats = {
+        "Total Stars": stats.get("Total Stars"),
+        "Total Forks": stats.get("Total Forks"),
+        "Public Repos": stats.get("Public Repos"),
+        "Followers": stats.get("Followers")
+    }
+
+    for key, value in display_stats.items():
+        if value is not None:
+            stat_items_svg += f'''
+            <g transform="translate(25, {y_position})">
+                <text x="25" y="15" font-family="Arial, sans-serif" font-size="14" fill="{theme['text']}">
+                    <tspan font-weight="bold">{key}:</tspan> {value}
+                </text>
+            </g>
+            '''
+            y_position += 25
+
+    rank_svg = f'''
+    <g transform="translate(400, 45)">
+        <text text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="{rank['color']}">
+            {rank['level']}
+        </text>
+    </g>
+    '''
 
     svg = f'''
     <svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
@@ -112,6 +172,7 @@ def create_stats_svg(stats, theme):
             GitHub Stats
         </text>
         {stat_items_svg}
+        {rank_svg}
     </svg>
     '''
     return svg.strip()
@@ -121,7 +182,6 @@ def fetch_top_languages(username):
     Returns a dummy Counter object with sample language data to avoid hitting API rate limits.
     """
     app.logger.info(f"Returning dummy language data for user: {username}")
-    # This structure (a Counter object) mimics the original function's output
     return Counter({
         "Python": 58000,
         "JavaScript": 22000,
