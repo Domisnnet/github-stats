@@ -1,24 +1,18 @@
 import os
 import math
 import logging
-from logging.handlers import RotatingFileHandler
 from collections import Counter
 
 import requests
 from flask import Flask, send_file, request, make_response
 from dotenv import load_dotenv
 
+# As variáveis de ambiente serão configuradas diretamente no Firebase
 load_dotenv()
 
 app = Flask(__name__)
 
-handler = RotatingFileHandler("app.log", maxBytes=10000, backupCount=3)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
+# O Cloud Functions captura logs enviados para a saída padrão
 app.logger.setLevel(logging.INFO)
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -30,6 +24,8 @@ HEADERS = {
 
 LANG_COLORS = {
     "Python": "#3572A5",
+    "Jupyter Notebook": "#DA5B0B",
+    "Cython": "#fedf5b",
     "JavaScript": "#f1e05a",
     "HTML": "#e34c26",
     "CSS": "#563d7c",
@@ -184,12 +180,13 @@ def calculate_rank(stats: dict) -> dict:
 def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
     theme = THEMES.get(theme_name, THEMES["tokyonight"])
     if not stats:
-        return f"""
+        return f'''
 <svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
   <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle"
         font-family="Segoe UI, Ubuntu, Sans-Serif">Failed to fetch GitHub stats</text>
-</svg>""".strip()
+</svg>
+'''.strip()
 
     rank = calculate_rank(stats)
 
@@ -214,17 +211,19 @@ def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
 
     stats_svg = ""
     for i, (label, value) in enumerate(stat_items.items()):
-        icon_svg = f"""
+        icon_svg = f'''
 <svg x="0" y="{i * 25}" width="16" height="16" viewBox="0 0 24 24"
      fill="{theme['icon']}" xmlns="http://www.w3.org/2000/svg">
   <path d="{icons[i]}"/>
-</svg>"""
-        text_svg = f"""
+</svg>
+'''
+        text_svg = f'''
 <text x="25" y="{i * 25 + 12}" fill="{theme['text']}"
       font-size="14" font-family="Segoe UI, Ubuntu, Sans-Serif">
   <tspan font-weight="bold">{label}:</tspan>
   <tspan x="150" text-anchor="start">{k_formatter(value)}</tspan>
-</text>"""
+</text>
+'''
         stats_svg += f"<g>{icon_svg}{text_svg}</g>\n"
 
     radius = 50
@@ -232,7 +231,7 @@ def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
     circumference = 2 * math.pi * radius
     offset = circumference - (rank["progress"] / 100 * circumference)
 
-    rank_circle_svg = f"""
+    rank_circle_svg = f'''
 <g>
   <circle r="{radius}" cx="{cx}" cy="{cy}" fill="none"
           stroke="{theme['rank_circle_bg']}" stroke-width="10"/>
@@ -243,9 +242,10 @@ def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
   <text x="{cx}" y="{cy + 10}" text-anchor="middle"
         fill="{theme['text']}" font-size="28" font-weight="bold"
         font-family="Segoe UI, Ubuntu, Sans-Serif">{rank['level']}</text>
-</g>"""
+</g>
+'''
 
-    svg = f"""
+    svg = f'''
 <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}"
      fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -255,13 +255,15 @@ def create_stats_svg(stats: dict, theme_name: str = "tokyonight") -> str:
     }}
   </style>
   <rect x="0.5" y="0.5" rx="4.5" height="99%" width="{width - 1}"
-        fill="{theme['background']}" stroke="{theme['border']}"/>
+        fill="{theme['background']}" stroke="{theme['border']}"
+  />
   <g transform="translate({padding}, {padding})">
-    <text x="0" y="18" class="header">{stats['name']}'s GitHub Stats</text>
+    <text x="0" y="18" class="header">{stats['name']}\'s GitHub Stats</text>
     <g transform="translate(0, 40)">{stats_svg}</g>
     <g transform="translate(320, 30)">{rank_circle_svg}</g>
   </g>
-</svg>"""
+</svg>
+'''
     return svg.strip()
 
 
@@ -270,12 +272,13 @@ def create_language_donut_chart_svg(
 ) -> str:
     theme = THEMES.get(theme_name, THEMES["tokyonight"])
     if not langs:
-        return f"""
+        return f'''
 <svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
   <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle"
         font-family="Segoe UI, Ubuntu, Sans-Serif">Failed to fetch language data</text>
-</svg>""".strip()
+</svg>
+'''.strip()
 
     total_size = sum(langs.values())
     top_langs = langs.most_common(6)
@@ -307,24 +310,27 @@ def create_language_donut_chart_svg(
         )
         paths.append(f'<path d="{path_d}" fill="{color}" />')
 
-        legend_items += f"""
+        legend_items += f'''
 <g transform="translate(20, {50 + i * 20})">
   <rect width="10" height="10" fill="{color}" rx="2" ry="2"/>
   <text x="15" y="10" font-family="Segoe UI, Ubuntu, Sans-Serif"
-        font-size="12" fill="{theme['text']}">{lang} ({percent:.1f}%)</text>
-</g>"""
+        font-size="12" fill="{theme['text']}"> {lang} ({percent:.1f}%)</text>
+</g>
+'''
 
         start_angle = end_angle
 
-    return f"""
+    return f'''
 <svg width="495" height="195" xmlns="http://www.w3.org/2000/svg">
   <rect width="493" height="193" x="1" y="1" rx="5" ry="5"
-        fill="{theme['background']}" stroke="{theme['border']}"/>
+        fill="{theme['background']}" stroke="{theme['border']}"
+  />
   <text x="20" y="30" font-family="Segoe UI, Ubuntu, Sans-Serif"
         font-size="18" font-weight="bold" fill="{theme['title']}">Top Languages</text>
   <g transform="translate(200, 0)">{' '.join(paths)}</g>
   <g>{legend_items}</g>
-</svg>""".strip()
+</svg>
+'''.strip()
 
 
 def fetch_top_languages(username: str) -> Counter | None:
@@ -382,8 +388,3 @@ def api_top_langs():
     resp.headers["Content-Type"] = "image/svg+xml"
     resp.headers["Cache-Control"] = "s-maxage=3600, stale-while-revalidate"
     return resp
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=True)
