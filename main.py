@@ -108,11 +108,9 @@ def create_stats_svg(stats, theme):
     svg = f'''
     <svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
         <rect width="448" height="178" x="1" y="1" rx="5" ry="5" fill="{theme['background']}" stroke="{theme['border']}" stroke-width="2"/>
-        <g>
-            <text x="25" y="35" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="{theme['title']}">
-                GitHub Stats
-            </text>
-        </g>
+        <text x="25" y="35" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="{theme['title']}">
+            GitHub Stats
+        </text>
         {stat_items_svg}
     </svg>
     '''
@@ -135,7 +133,7 @@ def fetch_top_languages(username):
 
 def create_language_donut_chart_svg(langs, theme):
     "Creates a donut chart SVG for top languages."
-    if not langs:
+    if not langs or not isinstance(langs, Counter):
         return f'''<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
                     <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
                     <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle" font-family="Arial, sans-serif">Failed to fetch language data</text>
@@ -204,7 +202,7 @@ def create_language_donut_chart_svg(langs, theme):
 def index():
     return send_file('src/index.html')
 
-@app.route("/api")
+@app.route("/api/stats")
 def api_stats():
     username = request.args.get('username')
     theme_name = request.args.get('theme', 'tokyonight')
@@ -219,7 +217,7 @@ def api_stats():
     
     response = make_response(svg_content)
     response.headers['Content-Type'] = 'image/svg+xml'
-    response.headers['Cache-Control'] = 's-maxage=3600, stale-while-revalidate'
+    response.headers['cache-control'] = 's-maxage=3600, stale-while-revalidate'
     
     return response
 
@@ -238,7 +236,7 @@ def api_top_langs():
     
     response = make_response(svg_content)
     response.headers['Content-Type'] = 'image/svg+xml'
-    response.headers['Cache-control'] = 's-maxage=3600, stale-while-revalidate'
+    response.headers['cache-control'] = 's-maxage=3600, stale-while-revalidate'
     
     return response
 
