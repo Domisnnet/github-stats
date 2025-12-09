@@ -13,3 +13,43 @@
 2025-12-09 15:50:32,456 INFO: Returning dummy stats data for user: Domisnnet [in /home/user/github-stats/main.py:78]
 2025-12-09 15:50:32,455 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:288]
 2025-12-09 15:50:32,457 INFO: Returning dummy language data for user: Domisnnet [in /home/user/github-stats/main.py:184]
+2025-12-09 15:53:14,530 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:269]
+2025-12-09 15:53:14,531 INFO: Returning dummy stats data for user: Domisnnet [in /home/user/github-stats/main.py:78]
+2025-12-09 15:53:14,536 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:288]
+2025-12-09 15:53:14,536 INFO: Returning dummy language data for user: Domisnnet [in /home/user/github-stats/main.py:184]
+2025-12-09 15:55:42,057 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:269]
+2025-12-09 15:55:42,058 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:288]
+2025-12-09 15:55:42,059 INFO: Returning dummy language data for user: Domisnnet [in /home/user/github-stats/main.py:184]
+2025-12-09 15:55:42,059 INFO: Returning dummy stats data for user: Domisnnet [in /home/user/github-stats/main.py:78]
+2025-12-09 15:56:35,129 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:238]
+2025-12-09 15:56:35,129 INFO: Fetching user data for Domisnnet [in /home/user/github-stats/main.py:82]
+2025-12-09 15:56:35,132 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:257]
+2025-12-09 15:56:35,133 INFO: Fetching repos for top languages of Domisnnet [in /home/user/github-stats/main.py:143]
+2025-12-09 15:56:35,332 INFO: Fetching repos for Domisnnet [in /home/user/github-stats/main.py:87]
+2025-12-09 15:56:38,093 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:238]
+2025-12-09 15:56:38,096 INFO: Fetching user data for Domisnnet [in /home/user/github-stats/main.py:82]
+2025-12-09 15:56:38,286 INFO: Fetching repos for Domisnnet [in /home/user/github-stats/main.py:87]
+2025-12-09 15:56:40,236 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:238]
+2025-12-09 15:56:40,239 INFO: Fetching user data for Domisnnet [in /home/user/github-stats/main.py:82]
+2025-12-09 15:56:40,345 INFO: Fetching repos for Domisnnet [in /home/user/github-stats/main.py:87]
+2025-12-09 15:57:02,024 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:288]
+2025-12-09 15:57:02,024 INFO: Returning dummy language data for user: Domisnnet [in /home/user/github-stats/main.py:184]
+2025-12-09 15:57:02,030 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:269]
+2025-12-09 15:57:02,031 INFO: Returning dummy stats data for user: Domisnnet [in /home/user/github-stats/main.py:78]
+2025-12-09 15:58:33,794 INFO: Received request for top-langs for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:288]
+2025-12-09 15:58:33,794 INFO: Returning dummy language data for user: Domisnnet [in /home/user/github-stats/main.py:184]
+2025-12-09 15:58:33,796 INFO: Received request for stats for username: Domisnnet with theme: tokyonight [in /home/user/github-stats/main.py:269]
+2025-12-09 15:58:33,798 INFO: Returning dummy stats data for user: Domisnnet [in /home/user/github-stats/main.py:78]
+2025-12-09 16:00:10,168 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:00:31,140 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:00:37,492 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:00:41,392 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:03:10,204 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:03:30,736 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:03:36,015 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:05:36,125 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:05:41,434 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:05:48,745 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:05:52,164 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:06:54,849 - main - INFO - Returning dummy stats for user: Domisnnet
+2025-12-09 16:06:59,638 - main - INFO - Returning dummy stats for user: Domisnnet

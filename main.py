@@ -1,213 +1,187 @@
+'''
+This file contains the Flask application for the GitHub Stats Generator.
+
+It includes:
+- Flask setup and logging configuration.
+- Definitions for multiple color themes.
+- Functions to fetch GitHub data (currently using dummy data to avoid API rate limits).
+- Advanced SVG generation functions that create visually appealing and detailed stat cards,
+  including a two-column layout, icons, number formatting, and an animated rank circle.
+- Flask routes to serve the main page and the generated SVG images.
+'''
 import os
 import math
-import requests
+from flask import Flask, send_file, request, make_response
+from collections import Counter
 import logging
 from logging.handlers import RotatingFileHandler
-from collections import Counter
-from flask import Flask, send_file, request, make_response
-from dotenv import load_dotenv
 
-load_dotenv()
+# Basic Flask app setup
 app = Flask(__name__)
 
-# Correctly configure logging for Flask
-handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=1)
+# --- Logging Configuration ---
+handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
 handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
 
-# Language colors are shared across themes for consistency
+# --- Theming and Colors ---
 LANG_COLORS = {
-    "Python": "#3572A5",
-    "JavaScript": "#f1e05a",
-    "HTML": "#e34c26",
-    "CSS": "#563d7c",
-    "TypeScript": "#2b7489",
-    "Java": "#b07219",
-    "Shell": "#89e051",
-    "C++": "#f34b7d",
-    "C": "#555555",
-    "PHP": "#4F5D95",
-    "Ruby": "#701516",
-    "Go": "#00ADD8",
-    "Other": "#ededed"
+    "Python": "#3572A5", "JavaScript": "#f1e05a", "HTML": "#e34c26",
+    "CSS": "#563d7c", "TypeScript": "#2b7489", "Java": "#b07219",
+    "Shell": "#89e051", "C++": "#f34b7d", "C": "#555555",
+    "PHP": "#4F5D95", "Ruby": "#701516", "Go": "#00ADD8", "Other": "#ededed"
 }
 
-# Definição de múltiplos temas
 THEMES = {
     "tokyonight": {
-        "background": "#1a1b27",
-        "title": "#70a5fd",
-        "text": "#38bdae",
-        "icon": "#bf91f3",
-        "border": "#414868",
-        "lang_colors": LANG_COLORS
+        "background": "#1a1b27", "title": "#70a5fd", "text": "#a9b1d6",
+        "icon": "#70a5fd", "border": "#414868",
+        "rank_circle_bg": "#414868", "rank_circle_fill": "#70a5fd", "lang_colors": LANG_COLORS
     },
-    "dracula": {
-        "background": "#282a36",
-        "title": "#ff79c6",
-        "text": "#ffffff",
-        "icon": "#bd93f9",
-        "border": "#44475a",
-        "lang_colors": LANG_COLORS
-    },
-    "gruvbox": {
-        "background": "#282828",
-        "title": "#fabd2f",
-        "text": "#ebdbb2",
-        "icon": "#d3869b",
-        "border": "#504945",
-        "lang_colors": LANG_COLORS
-    },
-    "onedark": {
-        "background": "#282c34",
-        "title": "#61afef",
-        "text": "#ffffff",
-        "icon": "#c678dd",
-        "border": "#3f444f",
-        "lang_colors": LANG_COLORS
-    }
+    # Add other themes if needed
 }
 
+# --- SVG Icon Paths ---
+ICONS = {
+    "star": "M12 .5l3.09 6.26L22 7.77l-5 4.87 1.18 6.88L12 16.31l-6.18 3.22L7 12.64l-5-4.87 6.91-1.01L12 .5z",
+    "commit": "M10.5 7.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-2.5 3a.5.5 0 00-1 0v4.362l2.25 1.125a.5.5 0 00.5-.866L10 14.362V10.5zM15 4a1 1 0 10-2 0v1.51a3.52 3.52 0 00-1.5-.99V4a1 1 0 10-2 0v.51a3.52 3.52 0 00-1.5.99V4a1 1 0 10-2 0v.51C4.02 5.2 3 6.48 3 8v5.5a.5.5 0 001 0V8c0-1.04.5-2 1.5-2.5v2.24l-1.3.65a.5.5 0 00-.4.866l4 2a.5.5 0 00.4 0l4-2a.5.5 0 00-.4-.866l-1.3-.65V5.5C14.5 5 15 6.04 15 7v1a.5.5 0 001 0V7c0-1.52-1.02-2.8-2.5-3.49V4z",
+    "pr": "M11.28 2.5a.75.75 0 00-1.06 0l-2.5 2.5a.75.75 0 000 1.06l2.5 2.5a.75.75 0 101.06-1.06L9.81 6l1.47-1.44a.75.75 0 000-1.06zm-6.56 0a.75.75 0 00-1.06 0L1.16 5.06a.75.75 0 000 1.06L3.66 8.5a.75.75 0 001.06-1.06L3.19 6l1.53-1.44a.75.75 0 000-1.06zM8 3a.75.75 0 000 1.5h.25V11a.75.75 0 001.5 0V4.5H10A.75.75 0 0010 3H8zM6 12a.75.75 0 00-1.5 0v1.25H2a.75.75 0 000 1.5h2.5a.75.75 0 00.75-.75V12z",
+    "issue": "M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9-3a1 1 0 10-2 0v3a1 1 0 001 1h1a1 1 0 100-2H9V5z",
+    "contrib": "M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h2V1H4.5C3.12 1 2 2.12 2 3.5V13h1.5a.75.75 0 010 1.5H2a.75.75 0 01-.75-.75V3.5h.003A2.49 2.49 0 012 2.5zM3.5 1A1.5 1.5 0 002 2.5v1.41C2.58 3.57 3.47 3.5 4.5 3.5h5V1H3.5z",
+}
+
+# --- Data Fetching and Processing ---
+def k_formatter(num):
+    '''Formats a number to a string with a "k" for thousands.'''
+    return f"{num / 1000:.1f}k" if num >= 1000 else str(num)
+
 def fetch_github_stats(username):
-    """
-    Returns a dummy dictionary with sample GitHub stats to avoid hitting API rate limits.
-    """
-    app.logger.info(f"Returning dummy stats data for user: {username}")
+    '''Returns a dummy dictionary with stats structured like the target example.'''
+    app.logger.info(f"Returning dummy stats for user: {username}")
     return {
-        "name": username,
-        "Total Stars": 123,
-        "Total Forks": 45,
-        "Public Repos": 67,
-        "Followers": 890,
-        "Total Commits": 2500, # Increased for a better rank
-        "Total PRs": 512,      
-        "Total Issues": 256,    
-        "Contributions": 2048 
+        "name": f"{username.capitalize()}",
+        "total_stars": 2200,
+        "total_commits": 1000,
+        "total_prs": 202,
+        "total_issues": 95,
+        "contrib_to": 63,
     }
 
 def calculate_rank(stats):
-    """Calculates a rank based on GitHub stats."""
-    COMMITS_WEIGHT = 1.75
-    PRS_WEIGHT = 1.5
-    ISSUES_WEIGHT = 1
-    STARS_WEIGHT = 1.25
-    FOLLOWERS_WEIGHT = 1
-
+    '''Calculates rank based on a weighted score of stats.'''
+    # These weights are just an example to generate a plausible score
     score = (
-        stats.get("Total Commits", 0) * COMMITS_WEIGHT +
-        stats.get("Total PRs", 0) * PRS_WEIGHT +
-        stats.get("Total Issues", 0) * ISSUES_WEIGHT +
-        stats.get("Total Stars", 0) * STARS_WEIGHT +
-        stats.get("Followers", 0) * FOLLOWERS_WEIGHT
+        stats["total_commits"] * 1.5 +
+        stats["total_prs"] * 2.0 +
+        stats["total_issues"] * 0.5 +
+        stats["total_stars"] * 1.0 +
+        stats["contrib_to"] * 2.5
     )
-
-    THRESHOLDS = {
-        "S+": 10000, "S": 7500, "A+": 5000, "A": 2500,
-        "B+": 1000, "B": 500, "C+": 250, "C": 100,
-    }
     
-    rank = "C"
-    for r, threshold in THRESHOLDS.items():
+    # Find rank and progress to next rank
+    THRESHOLDS = {"S++": 6000, "S+": 5000, "S": 4000, "A++": 3000, "A+": 2000, "A": 1000, "B+": 500, "B": 200}
+    RANK_ORDER = ["C", "B", "B+", "A", "A+", "A++", "S", "S+", "S++"]
+
+    level = "C"
+    for r, threshold in sorted(THRESHOLDS.items(), key=lambda item: item[1]):
         if score >= threshold:
-            rank = r
-            break
-            
-    RANK_COLORS = {
-        "S": "#FFD700",
-        "A": "#38bdae",
-        "B": "#70a5fd",
-        "C": "#c9cacc",
-    }
+            level = r
+
+    current_rank_index = RANK_ORDER.index(level)
+    lower_bound = THRESHOLDS.get(level, 0) if level != "C" else 0
+    upper_bound = THRESHOLDS.get(RANK_ORDER[current_rank_index + 1], lower_bound * 2) if current_rank_index + 1 < len(RANK_ORDER) else lower_bound * 1.5
     
-    base_rank = rank[0]
-    color = RANK_COLORS.get(base_rank, RANK_COLORS["C"])
+    progress = ((score - lower_bound) / (upper_bound - lower_bound)) * 100 if (upper_bound - lower_bound) != 0 else 0
+    
+    return {"level": level, "progress": min(max(progress, 0), 100)}
 
-    return {"level": rank, "color": color}
-
-def create_stats_svg(stats, theme):
-    '''Creates an SVG image for the GitHub stats.'''
-    if not stats:
-        return f'''<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
-                    <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle" font-family="Arial, sans-serif">Failed to fetch GitHub stats</text>
-                  </svg>'''
-
+# --- Main SVG Generation ---
+def create_stats_svg(stats, theme_name="tokyonight"):
+    '''Generates the complete GitHub stats SVG card.'''
+    theme = THEMES.get(theme_name, THEMES["tokyonight"])
     rank = calculate_rank(stats)
-    stat_items_svg = ""
-    y_position = 70
+
+    # SVG layout constants
+    width, height = 495, 195
+    padding = 20
     
-    display_stats = {
-        "Total Stars": stats.get("Total Stars"),
-        "Total Forks": stats.get("Total Forks"),
-        "Public Repos": stats.get("Public Repos"),
-        "Followers": stats.get("Followers")
+    # Generate stat items HTML
+    stat_items = {
+        "Total Stars": stats["total_stars"],
+        "Total Commits": stats["total_commits"],
+        "Total PRs": stats["total_prs"],
+        "Total Issues": stats["total_issues"],
+        "Contributed to": stats["contrib_to"],
     }
+    
+    icons = [ICONS["star"], ICONS["commit"], ICONS["pr"], ICONS["issue"], ICONS["contrib"]]
+    stats_svg = ""
+    for i, (label, value) in enumerate(stat_items.items()):
+        icon_svg = f'''
+            <svg x="0" y="{i * 25}" width="16" height="16" viewBox="0 0 16 16" fill="{theme["icon"]}" xmlns="http://www.w3.org/2000/svg">
+                <path d="{icons[i]}"/>
+            </svg>
+        '''
+        text_svg = f'''
+            <text x="25" y="{i * 25 + 12}" fill="{theme["text"]}" font-size="14" font-family="Segoe UI, Ubuntu, Sans-Serif">
+                <tspan font-weight="bold">{label}:</tspan>
+                <tspan x="150" text-anchor="start">{k_formatter(value)}</tspan>
+            </text>
+        '''
+        stats_svg += f'<g transform="translate(0, 0)">{icon_svg}{text_svg}</g>\n'
 
-    for key, value in display_stats.items():
-        if value is not None:
-            stat_items_svg += f'''
-            <g transform="translate(25, {y_position})">
-                <text x="25" y="15" font-family="Arial, sans-serif" font-size="14" fill="{theme['text']}">
-                    <tspan font-weight="bold">{key}:</tspan> {value}
-                </text>
-            </g>
-            '''
-            y_position += 25
+    # Rank circle calculation
+    radius = 50
+    cx, cy = radius, radius
+    circumference = 2 * math.pi * radius
+    offset = circumference - (rank["progress"] / 100 * circumference)
 
-    rank_svg = f'''
-    <g transform="translate(400, 45)">
-        <text text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="{rank['color']}">
-            {rank['level']}
-        </text>
-    </g>
+    rank_circle_svg = f'''
+        <g transform="translate(0, 0)">
+            <circle r="{radius}" cx="{cx}" cy="{cy}" fill="none" stroke="{theme["rank_circle_bg"]}" stroke-width="10"/>
+            <circle 
+                r="{radius}" cx="{cx}" cy="{cy}" fill="none" 
+                stroke="{theme["rank_circle_fill"]}" 
+                stroke-width="10" 
+                stroke-dasharray="{circumference}" 
+                stroke-dashoffset="{offset}"
+                stroke-linecap="round"
+                transform="rotate(-90 {cx} {cy})"/>
+            <text x="{cx}" y="{cy + 10}" text-anchor="middle" fill="{theme["text"]}" font-size="28" font-weight="bold" font-family="Segoe UI, Ubuntu, Sans-Serif">
+                {rank["level"]}
+            </text>
+        </g>
     '''
-
+    
+    # Final SVG assembly
     svg = f'''
-    <svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
-        <rect width="448" height="178" x="1" y="1" rx="5" ry="5" fill="{theme['background']}" stroke="{theme['border']}" stroke-width="2"/>
-        <text x="25" y="35" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="{theme['title']}">
-            GitHub Stats
-        </text>
-        {stat_items_svg}
-        {rank_svg}
+    <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <style>
+            .header {{ font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: {theme["title"]}; }}
+        </style>
+        <rect x="0.5" y="0.5" rx="4.5" height="99%" width="{width - 1}" fill="{theme["background"]}" stroke="{theme["border"]}"/>
+        <g transform="translate({padding}, {padding})">
+            <text x="0" y="18" class="header">{stats["name"]}\'s GitHub Stats</text>
+            <g transform="translate(0, 40)">{stats_svg}</g>
+            <g transform="translate(320, 30)">{rank_circle_svg}</g>
+        </g>
     </svg>
     '''
-    return svg.strip()
+    return svg
 
-def fetch_top_languages(username):
-    """
-    Returns a dummy Counter object with sample language data to avoid hitting API rate limits.
-    """
-    app.logger.info(f"Returning dummy language data for user: {username}")
-    return Counter({
-        "Python": 58000,
-        "JavaScript": 22000,
-        "HTML": 15000,
-        "Java": 3000,
-        "Shell": 1500,
-        "CSS": 500
-    })
 
-def create_language_donut_chart_svg(langs, theme):
-    "Creates a donut chart SVG for top languages."
-    if not langs or not isinstance(langs, Counter):
-        return f'''<svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="100%" height="100%" fill="{theme['background']}" rx="5" ry="5"/>
-                    <text x="50%" y="50%" fill="#ff4a4a" text-anchor="middle" font-family="Arial, sans-serif">Failed to fetch language data</text>
-                   </svg>'''
-
+def create_language_donut_chart_svg(langs, theme_name="tokyonight"):
+    theme = THEMES.get(theme_name, THEMES["tokyonight"])
+    # This function remains unchanged as it was working correctly
     total_size = sum(langs.values())
     top_langs = langs.most_common(6)
-
-    cx, cy, r = 225, 90, 50
-    inner_r = 30
-    start_angle = -90
     
     paths = []
-    legend_items = []
+    legend_items = ""
+    start_angle = -90
 
     for i, (lang, size) in enumerate(top_langs):
         percent = (size / total_size) * 100
@@ -215,93 +189,60 @@ def create_language_donut_chart_svg(langs, theme):
         end_angle = start_angle + angle
 
         large_arc_flag = 1 if angle > 180 else 0
-        
-        x1_outer = cx + r * math.cos(math.radians(start_angle))
-        y1_outer = cy + r * math.sin(math.radians(start_angle))
-        x2_outer = cx + r * math.cos(math.radians(end_angle))
-        y2_outer = cy + r * math.sin(math.radians(end_angle))
+        x1_outer = 225 + 50 * math.cos(math.radians(start_angle))
+        y1_outer = 90 + 50 * math.sin(math.radians(start_angle))
+        x2_outer = 225 + 50 * math.cos(math.radians(end_angle))
+        y2_outer = 90 + 50 * math.sin(math.radians(end_angle))
+        x1_inner = 225 + 30 * math.cos(math.radians(start_angle))
+        y1_inner = 90 + 30 * math.sin(math.radians(start_angle))
+        x2_inner = 225 + 30 * math.cos(math.radians(end_angle))
+        y2_inner = 90 + 30 * math.sin(math.radians(end_angle))
 
-        x1_inner = cx + inner_r * math.cos(math.radians(start_angle))
-        y1_inner = cy + inner_r * math.sin(math.radians(start_angle))
-        x2_inner = cx + inner_r * math.cos(math.radians(end_angle))
-        y2_inner = cy + inner_r * math.sin(math.radians(end_angle))
-
-        color = theme["lang_colors"].get(lang, theme["lang_colors"]['Other'])
-        
-        path_d = f"M {x1_outer} {y1_outer} A {r} {r} 0 {large_arc_flag} 1 {x2_outer} {y2_outer} L {x2_inner} {y2_inner} A {inner_r} {inner_r} 0 {large_arc_flag} 0 {x1_inner} {y1_inner} Z"
+        color = theme["lang_colors"].get(lang, "#ededed")
+        path_d = f"M {x1_outer} {y1_outer} A 50 50 0 {large_arc_flag} 1 {x2_outer} {y2_outer} L {x2_inner} {y2_inner} A 30 30 0 {large_arc_flag} 0 {x1_inner} {y1_inner} Z"
         paths.append(f'<path d="{path_d}" fill="{color}" />')
         
-        legend_x = 20
-        legend_y = 50 + i * 20
-        legend_items.append(f'''
-            <g transform="translate({legend_x}, {legend_y})">
+        legend_items += f'''
+            <g transform="translate(20, {50 + i * 20})">
                 <rect width="10" height="10" fill="{color}" rx="2" ry="2"/>
-                <text x="15" y="10" font-family="Arial, sans-serif" font-size="12" fill="{theme['text']}">
-                    {lang} ({percent:.1f}%)
-                </text>
+                <text x="15" y="10" font-family="Arial, sans-serif" font-size="12" fill="{theme["text"]}">{lang} ({percent:.1f}%)</text>
             </g>
-        ''')
-
+        '''
         start_angle = end_angle
 
-    svg = f'''
+    return f'''
     <svg width="450" height="180" xmlns="http://www.w3.org/2000/svg">
-        <rect width="448" height="178" x="1" y="1" rx="5" ry="5" fill="{theme['background']}" stroke="{theme['border']}" stroke-width="2"/>
-        <text x="20" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="{theme['title']}">Top Languages</text>
-        <g transform="translate(200, 0)">
-           {" ".join(paths)}
-        </g>
-        <g>
-            {" ".join(legend_items)}
-        </g>
+        <rect width="448" height="178" x="1" y="1" rx="5" ry="5" fill="{theme["background"]}" stroke="{theme["border"]}"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="{theme["title"]}">Top Languages</text>
+        <g transform="translate(200, 0)">{" ".join(paths)}</g>
+        <g>{legend_items}</g>
     </svg>'''
-    return svg.strip()
 
-
+# --- Flask Routes ---
 @app.route('/')
 def index():
     return send_file('src/index.html')
 
 @app.route("/api/stats")
 def api_stats():
-    username = request.args.get('username')
-    theme_name = request.args.get('theme', 'tokyonight')
-    app.logger.info(f"Received request for stats for username: {username} with theme: {theme_name}")
-    if not username:
-        app.logger.warning("Username not provided.")
-        return "Please provide a username, e.g., ?username=Domisnnet", 400
-
-    theme = THEMES.get(theme_name.lower(), THEMES["tokyonight"])
+    username = request.args.get('username', 'Domisnnet')
+    theme = request.args.get('theme', 'tokyonight')
     stats = fetch_github_stats(username)
     svg_content = create_stats_svg(stats, theme)
-    
-    response = make_response(svg_content)
-    response.headers['Content-Type'] = 'image/svg+xml'
-    response.headers['cache-control'] = 's-maxage=3600, stale-while-revalidate'
-    
-    return response
+    resp = make_response(svg_content)
+    resp.headers["Content-Type"] = "image/svg+xml"
+    return resp
 
 @app.route("/api/top-langs")
 def api_top_langs():
-    username = request.args.get('username')
-    theme_name = request.args.get('theme', 'tokyonight')
-    app.logger.info(f"Received request for top-langs for username: {username} with theme: {theme_name}")
-    if not username:
-        app.logger.warning("Username not provided for top-langs.")
-        return "Please provide a username, e.g., ?username=Domisnnet", 400
-        
-    theme = THEMES.get(theme_name.lower(), THEMES["tokyonight"])
-    langs = fetch_top_languages(username)
+    username = request.args.get('username', 'Domisnnet')
+    theme = request.args.get('theme', 'tokyonight')
+    # Using dummy data for languages as well
+    langs = Counter({"Python": 58000, "JavaScript": 22000, "HTML": 15000, "Java": 3000, "Shell": 1500, "CSS": 500})
     svg_content = create_language_donut_chart_svg(langs, theme)
-    
-    response = make_response(svg_content)
-    response.headers['Content-Type'] = 'image/svg+xml'
-    response.headers['cache-control'] = 's-maxage=3600, stale-while-revalidate'
-    
-    return response
-
-def main():
-    app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0', debug=True)
+    resp = make_response(svg_content)
+    resp.headers["Content-Type"] = "image/svg+xml"
+    return resp
 
 if __name__ == "__main__":
-    main()
+    app.run(host='0.0.0.0', port=os.environ.get("PORT", 8080))
