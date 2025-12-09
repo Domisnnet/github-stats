@@ -23,21 +23,21 @@ HEADERS = {
 }
 
 LANG_COLORS = {
-    "Python": "#3572A5",
-    "Jupyter Notebook": "#DA5B0B",
-    "Cython": "#fedf5b",
-    "JavaScript": "#f1e05a",
-    "HTML": "#e34c26",
-    "CSS": "#563d7c",
-    "TypeScript": "#2b7489",
-    "Java": "#b07219",
-    "Shell": "#89e051",
-    "C++": "#f34b7d",
     "C": "#555555",
-    "PHP": "#4F5D95",
-    "Ruby": "#701516",
+    "C++": "#f34b7d",
+    "CSS": "#563d7c",
+    "Cython": "#fedf5b",
     "Go": "#00ADD8",
+    "HTML": "#e34c26",
+    "Java": "#b07219",
+    "JavaScript": "#f1e05a",
+    "Jupyter Notebook": "#DA5B0B",
     "Other": "#ededed",
+    "PHP": "#4F5D95",
+    "Python": "#3572A5",
+    "Ruby": "#701516",
+    "Shell": "#89e051",
+    "TypeScript": "#2b7489",
 }
 
 THEMES = {
